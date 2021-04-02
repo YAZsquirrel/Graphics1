@@ -1,0 +1,101 @@
+﻿<Window x:Name="MyWindow" 
+        x:Class="Graphics1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wpf="clr-namespace:SharpGL.WPF;assembly=SharpGL.WPF"
+        Title="Лабораторная работа 1" 
+        Height="659" 
+        Width="1044" 
+        Background="Gray" KeyDown="MyWindow_KeyDown" KeyUp="MyWindow_KeyUp">
+
+	<Grid Height="560"
+         VerticalAlignment="Center">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition/>
+			<ColumnDefinition Width="0*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="0*"/>
+			<RowDefinition Height="269*"/>
+			<RowDefinition Height="11*"/>
+			<RowDefinition Height="0*"/>
+		</Grid.RowDefinitions>
+		<wpf:OpenGLControl x:Name="OpenGLControl" 
+                         OpenGLDraw="OpenGLControl_OpenGLDraw"
+                         OpenGLInitialized="OpenGLControl_OpenGLInitialized"
+                         Resized="OpenGLControl_Resized"
+                         DrawFPS="True"
+                         MouseLeftButtonDown="OpenGLControl_MouseLeftButtonDown" 
+                         Margin="10,-28,0,-28"
+                         Width="824" 
+                         HorizontalAlignment="Left" Grid.Row="1" MouseRightButtonDown="OpenGLControl_MouseRightButtonDown" Grid.RowSpan="3"/>
+		<wpf:OpenGLControl x:Name="OGLControl_ColorPicked" Margin="891,0,0,66" Grid.Row="1" Width="100" Height="100" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5" OpenGLDraw="OGLControl_ColorPicked_OpenGLDraw" VerticalAlignment="Bottom">
+			<wpf:OpenGLControl.RenderTransform>
+				<TransformGroup>
+					<ScaleTransform/>
+					<SkewTransform/>
+					<RotateTransform Angle="45"/>
+					<TranslateTransform/>
+				</TransformGroup>
+			</wpf:OpenGLControl.RenderTransform>
+		</wpf:OpenGLControl>
+
+		<Button x:Name="Button_DeleteAll" 
+                 Click="Button_DeleteAll_Click" 
+                 Margin="851,0,0,362" BorderBrush="{x:Null}" Height="39" Width="39" Grid.Row="1" HorizontalAlignment="Left" ToolTip="Удалить весь полигон" VerticalAlignment="Bottom">
+			<Button.Background>
+				<ImageBrush ImageSource="/Trash.png"/>
+			</Button.Background>
+			<Button.Foreground>
+				<ImageBrush ImageSource="/Brush.png"/>
+			</Button.Foreground>
+			<Grid/>
+		</Button>
+		<Slider x:Name="Slider_Red" HorizontalAlignment="Left" Margin="871,0,0,256" VerticalAlignment="Bottom" Width="120" Maximum="255" SmallChange="1" LargeChange="16" ValueChanged="Slider_Red_ValueChanged" Grid.Row="1" Height="18"/>
+		<Slider x:Name="Slider_Green" HorizontalAlignment="Left" Margin="871,295,0,0" VerticalAlignment="Top" Width="120" Maximum="255" SmallChange="1" LargeChange="16" ValueChanged="Slider_Green_ValueChanged" Grid.Row="1" Height="18"/>
+		<Slider x:Name="Slider_Blue" HorizontalAlignment="Left" Margin="871,324,0,0" VerticalAlignment="Top" Width="120" Maximum="255" SmallChange="1" LargeChange="16" ValueChanged="Slider_Blue_ValueChanged" Grid.Row="1" Height="18"/>
+		<TextBlock x:Name="TB_R" HorizontalAlignment="Left" Margin="846,0,0,253" TextWrapping="Wrap" VerticalAlignment="Bottom" Background="Red" Height="25" Width="20" FontWeight="Normal" FontFamily="MV Boli" FontSize="16" FontStyle="Normal" TextAlignment="Center" Text="R" Grid.Row="1">
+			<TextBlock.TextDecorations>
+				<TextDecoration/>
+			</TextBlock.TextDecorations>
+		</TextBlock>
+		<TextBlock x:Name="TB_G" HorizontalAlignment="Left" Margin="846,0,0,221" TextWrapping="Wrap" VerticalAlignment="Bottom" Background="#FF00F300" Height="25" Width="20" FontWeight="Normal" FontFamily="MV Boli" FontSize="16" FontStyle="Normal" TextAlignment="Center" Text="G" Grid.Row="1">
+			<TextBlock.TextDecorations>
+				<TextDecoration/>
+			</TextBlock.TextDecorations>
+		</TextBlock>
+		<TextBlock x:Name="TB_B" HorizontalAlignment="Left" Margin="846,0,0,191" TextWrapping="Wrap" VerticalAlignment="Bottom" Background="Blue" Height="25" Width="20" FontWeight="Normal" FontFamily="MV Boli" FontSize="16" FontStyle="Normal" TextAlignment="Center" Text="B" Foreground="White" Grid.Row="1">
+			<TextBlock.TextDecorations>
+				<TextDecoration/>
+			</TextBlock.TextDecorations>
+		</TextBlock>
+		<TextBox x:Name="TextBox_R" HorizontalAlignment="Left" Margin="991,0,0,254" Text="0" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="33" FontFamily="Algerian" FontWeight="Bold" FontSize="14" TextChanged="TextBox_R_TextChanged" Grid.Row="1" Height="20"/>
+		<TextBox x:Name="TextBox_G" HorizontalAlignment="Left" Margin="991,0,0,223" Text="0" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="33" FontFamily="Algerian" FontWeight="Bold" FontSize="14" TextChanged="TextBox_G_TextChanged" Grid.Row="1" Height="20"/>
+		<TextBox x:Name="TextBox_B" HorizontalAlignment="Left" Margin="991,0,0,193" Text="0" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="33" FontFamily="Algerian" FontWeight="Bold" FontSize="14" TextChanged="TextBox_B_TextChanged" Grid.Row="1" Height="20"/>
+		<Button x:Name="Button_NewPolygon" 
+	  Click="Button_NewPolygon_Click" 
+	  Margin="892,0,0,361" BorderBrush="{x:Null}" Height="40" Width="39" Grid.Row="1" AutomationProperties.HelpText="Сохраняет нарисованный полигон" ToolTip="Сохранить полигон в набор" HorizontalAlignment="Left" Foreground="{x:Null}" VerticalAlignment="Bottom">
+			<Button.Background>
+				<ImageBrush ImageSource="/Plus.png"/>
+			</Button.Background>
+			<Grid/>
+		</Button>
+		<Button x:Name="Button_DeleteLast" 
+	  Click="Button_DeleteLast_Click" 
+	  Margin="934,0,0,361" BorderBrush="{x:Null}" Height="40" Width="40" Grid.Row="1" AutomationProperties.HelpText="" ToolTip="Удалить выбранную точку" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+			<Button.Background>
+				<ImageBrush ImageSource="/Brush.png"/>
+			</Button.Background>
+		</Button>
+		<ListBox x:Name="ListBox_PolygonList" Height="118" Margin="846,0,14,0" Grid.RowSpan="2" VerticalAlignment="Top"/>
+		<TextBox x:Name="TextBox_PolygonName" HorizontalAlignment="Left" Margin="846,0,0,311" Text="Name" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="188" FontFamily="Arial Black" FontWeight="Bold" FontSize="16" Grid.Row="1" Height="20"/>
+		<Button x:Name="Button_Save_Copy" 
+	  Click="Button_AddNew_Click" 
+	  Margin="979,0,0,361" BorderBrush="{x:Null}" Height="40" Width="40" Grid.Row="1" AutomationProperties.HelpText="" ToolTip="Сохранить набор полигонов" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+			<Button.Background>
+				<ImageBrush ImageSource="/Save.png"/>
+			</Button.Background>
+		</Button>
+	</Grid>
+
+</Window>

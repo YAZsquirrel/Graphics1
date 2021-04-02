@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="b3c3db3f80c8a731ee1c87f67fe5ba31.png" />
+    <None Remove="Brush.png" />
+    <None Remove="Plus.png" />
+    <None Remove="Save.png" />
+    <None Remove="Trash.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpGL.WPF" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Brush.png" />
+    <Resource Include="Plus.png" />
+    <Resource Include="Save.png" />
+    <Resource Include="Trash.png" />
+  </ItemGroup>
+
+</Project>

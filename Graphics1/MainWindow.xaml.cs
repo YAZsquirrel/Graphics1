@@ -1,0 +1,369 @@
+﻿using SharpGL;
+using SharpGL.WPF;
+using System;
+using System.Collections.Generic;
+using System.Windows;
+
+namespace Graphics1
+{
+   public partial class MainWindow : Window
+   {
+      enum ColorName
+      { Red, Green, Blue }
+      public MainWindow()
+      {
+         InitializeComponent();
+      }
+      struct Point
+      {
+         public double X { get; set; }
+         public double Y { get; set; }
+         public double[] Color { get; set; }
+         public Point(double _x, double _y, double[] rgba)
+         {
+            X = _x; Y = _y;
+            Color = rgba;
+         }
+         public void SetColor(double[] col)
+         {
+            Color = col;
+         }
+         public void SetPosition(double[] xy)
+         {
+            X = xy[0]; Y = xy[1];
+         }
+         public void SetPosition(double x, double y)
+         {
+            X = x; Y = y;
+         }
+         public void SetColor(double col, ColorName cn)
+         {
+            Color[(byte)cn] = col;
+         }
+
+      };
+      struct Polygon
+      {
+         public List<Point?> Points { get; set; }
+         public Polygon(List<Point?> points)
+         {
+            Points = points;
+         }
+      }
+
+      List<List<Polygon?>> Sets = new List<List<Polygon?>>();
+
+      Polygon? curPolygon;                               //To change and remove
+      List<Point?> curPoints = new List<Point?>();       //
+      Point? curPoint;
+      List<Polygon?> curSet = new List<Polygon?>();
+
+      Dictionary<string, List<Polygon?>> PolygonSetDict = new Dictionary<string, List<Polygon?>> { };
+
+      double[] rgb = new double[3] { 1f, 1f, 1f};
+      bool isCtrlDown = false;
+      bool pointChanged = false;
+      private void OpenGLControl_OpenGLInitialized(object sender, OpenGLRoutedEventArgs args)
+      {
+         curPolygon = new Polygon(curPoints);
+         curSet.Add(curPolygon);
+         Sets.Add(curSet);
+      }
+      private void OpenGLControl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
+      {
+         var gl = args.OpenGL;
+         gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+         gl.ClearColor(1f, 1f, 1f, 1f);
+
+         //Drawing current points
+         gl.LineWidth(3);
+         gl.PointSize(12);
+         gl.Enable(OpenGL.GL_POINT_SMOOTH);
+         gl.Enable(OpenGL.GL_LINE_SMOOTH);
+
+         foreach (var poly in curSet)
+         {
+            if (poly.Equals(curPolygon))
+            {
+               foreach (var point in ((Polygon)curPolygon).Points)
+               {
+                  if (point.Equals(curPoint))
+                     gl.PointSize(20);
+                  else 
+                     gl.PointSize(10);
+                  gl.Begin(OpenGL.GL_POINTS);
+                     gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
+                     gl.Vertex(((Point)point).X, ((Point)point).Y);
+                  gl.End();
+               }
+
+               gl.Begin(OpenGL.GL_LINE_LOOP);
+               foreach (var point in ((Polygon)curPolygon).Points)
+               {
+                  gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
+                  gl.Vertex(((Point)point).X, ((Point)point).Y);
+               }
+               gl.End();
+            }
+            else
+            {
+               gl.Begin(OpenGL.GL_POINT);
+               foreach (var point in ((Polygon)poly).Points)
+               {
+                  gl.Color(((Point)point).Color);
+                  gl.Vertex(((Point)point).X, ((Point)point).Y);
+               }
+               gl.End();
+            }
+         }
+
+         foreach (var set in Sets)
+         {
+            foreach (var poly in set)
+            {
+               gl.Begin(OpenGL.GL_TRIANGLE_STRIP);
+               foreach (var point in ((Polygon)poly).Points)
+               {
+                  gl.Color(((Point)point).Color);
+                  gl.Vertex(((Point)point).X, ((Point)point).Y);
+               }
+               gl.End();
+            }
+         }
+
+         gl.Finish();
+         if (curPoint != null) Title = $"Лабораторная работа 1 {{ {((Point)curPoint).X / 2 + 0.5} , {((Point)curPoint).Y / 2 - 0.5} }} ({rgb[0] * 255}, {rgb[1] * 255}, {rgb[2] * 255})";
+         else Title = $"Лабораторная работа 1";
+      }
+      private void OpenGLControl_Resized(object sender, OpenGLRoutedEventArgs args)
+      {
+      }
+      #region Color Management
+      private void OGLControl_ColorPicked_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
+      {
+         var gl = args.OpenGL;
+         gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+         gl.ClearColor((float)rgb[0], (float)rgb[1], (float)rgb[2], 0);
+      }
+
+      private void Slider_Red_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+      {
+         TextBox_R.Text = $"{Math.Floor(Slider_Red.Value)}";
+         rgb[0] = Slider_Red.Value / 255;
+         if (curPoint != null && !pointChanged) { ((Point)curPoint).SetColor(rgb[0], ColorName.Red); pointChanged = false; }
+      }
+      private void Slider_Green_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+      {
+         TextBox_G.Text = $"{Math.Floor(Slider_Green.Value)}";
+         rgb[1] = Slider_Green.Value / 255;
+         if (curPoint != null && !pointChanged) { ((Point)curPoint).SetColor(rgb[1], ColorName.Green); pointChanged = false; }
+      }
+      private void Slider_Blue_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+      {
+         TextBox_B.Text = $"{Math.Floor(Slider_Blue.Value)}";
+         rgb[2] = Slider_Blue.Value / 255;
+         if (curPoint != null && !pointChanged) { ((Point)curPoint).SetColor(rgb[2], ColorName.Blue); pointChanged = false; }
+      }
+      private void TextBox_R_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      {
+         try
+         {
+            if (Convert.ToInt32(TextBox_R.Text) < 0) { Slider_Red.Value = 0; TextBox_R.Text = "0"; }
+            else if (Convert.ToInt32(TextBox_R.Text) > 255) { Slider_Red.Value = 255; TextBox_R.Text = "255"; }
+            else Slider_Red.Value = Convert.ToInt32(TextBox_R.Text);
+         }
+         catch
+         {
+            Slider_Red.Value = 0;
+            TextBox_R.Text = "0";
+         }
+         if (!pointChanged) rgb[0] = Slider_Red.Value / 255;
+      }
+      private void TextBox_G_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      {
+         try
+         {
+            if (Convert.ToInt32(TextBox_G.Text) < 0) { Slider_Green.Value = 0; TextBox_G.Text = "0"; }
+            else if (Convert.ToInt32(TextBox_G.Text) > 255) { Slider_Green.Value = 255; TextBox_G.Text = "255"; }
+            else Slider_Green.Value = Convert.ToInt32(TextBox_G.Text);
+         }
+         catch
+         {
+            Slider_Green.Value = 0;
+            TextBox_G.Text = "0";
+         }
+         if (!pointChanged) rgb[1] = Slider_Green.Value / 255;
+      }
+      private void TextBox_B_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      {
+         try
+         {
+            if (Convert.ToInt32(TextBox_B.Text) < 0) { Slider_Blue.Value = 0; TextBox_B.Text = "0"; }
+            else if (Convert.ToInt32(TextBox_B.Text) > 255) { Slider_Blue.Value = 255; TextBox_B.Text = "255"; }
+            else Slider_Blue.Value = Convert.ToInt32(TextBox_B.Text);
+         }
+         catch
+         {
+            Slider_Blue.Value = 0;
+            TextBox_B.Text = "0";
+         }
+         if (!pointChanged) rgb[2] = Slider_Blue.Value / 255;
+      }
+      #endregion
+
+      #region Controls
+      private void OpenGLControl_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+      {
+         var x = 2 * (e.GetPosition(sender as OpenGLControl).X / OpenGLControl.ActualWidth) - 1;
+         var y = 1 - 2 * e.GetPosition(sender as OpenGLControl).Y / OpenGLControl.ActualHeight;
+
+         if (!isCtrlDown/* && curPolygon != null*/)
+         {
+            curPoint = new Point(x, y, rgb.Clone() as double[]);
+            curPoints.Add(curPoint);
+         }
+         else if (isCtrlDown && curPolygon != null)
+         {
+            int i = curPoints.IndexOf(curPoint);
+            curPoints[i] = curPoint = new Point(x, y, ((Point)curPoint).Color);
+         }
+      }
+      private void OpenGLControl_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+      {
+         if (curPolygon != null)
+         {
+            var x = 2 * (e.GetPosition(sender as OpenGLControl).X / OpenGLControl.ActualWidth) - 1;
+            var y = 1 - 2 * e.GetPosition(sender as OpenGLControl).Y / OpenGLControl.ActualHeight;
+            double min;
+            double minp = double.MaxValue;
+            bool foundLesser;
+            foreach (var set in Sets)
+            {
+               foreach (Polygon? poly in set)
+               {
+                  foundLesser = false;
+                  foreach (Point? point in ((Polygon)poly).Points)
+                  {
+                     min = Math.Min(Math.Sqrt((x - ((Point)point).X) * (x - ((Point)point).X)
+                                            + (y - ((Point)point).Y) * (y - ((Point)point).Y)), minp);
+                     if (min != minp)
+                     {
+                        curPoint = point; foundLesser = true; minp = min;
+                     }
+                  }
+                  if (curPoint != null && ((Polygon)poly).Points.Count > 0 && foundLesser) 
+                  { curPolygon = poly; curPoints = ((Polygon)poly).Points; }
+               }
+               if (curPoint != null && set.Contains(curPolygon)) curSet = set;
+            }
+
+            rgb = ((Point)curPoint).Color.Clone() as double[];
+
+            Slider_Red.Value = rgb[0] * 255;
+            Slider_Green.Value = rgb[1] * 255;
+            Slider_Blue.Value = rgb[2] * 255;
+            pointChanged = false;
+
+            ListBox_PolygonList.UnselectAll();
+         }
+      }
+      private void Button_DeleteAll_Click(object sender, RoutedEventArgs e)
+      {
+         curPoints.Clear();
+         if (curSet != null && Sets.Count > 1)
+         {
+            Sets.Remove(curSet);
+            if (ListBox_PolygonList.SelectedIndex >= 0)
+            {
+               PolygonSetDict.Remove((string)ListBox_PolygonList.SelectedItem);
+               ListBox_PolygonList.Items.Remove(ListBox_PolygonList.SelectedItem);
+            }
+            curPoint = null;
+            curSet.Clear();
+         }
+         else if (Sets.Count == 1)
+         {
+            Sets[0].Clear();
+
+            curPoints = new List<Point?>();
+            curPoint = null;
+            curSet = new List<Polygon?>();
+            curPolygon = new Polygon(curPoints);
+            curSet.Add(curPolygon);
+            Sets[0] = curSet;
+         }
+
+      }
+      private void Button_NewPolygon_Click(object sender, RoutedEventArgs e) // Add new polygon to cur set
+      {
+         if (curSet.Count > 0)
+         {
+            if (curPoints.Count > 2)
+            {
+               curSet.Add(new Polygon(new List<Point?>(curPoints)));
+            }
+            curPoint = null;
+            curPoints.Clear();
+         }
+      }     
+      private void Button_DeleteLast_Click(object sender, RoutedEventArgs e) // delete cur point
+      {
+         if (curPoints.Count > 1)
+         {
+            curPoints.RemoveAt(curPoints.IndexOf(curPoint));
+            if (curPoints.Count > 1)
+               curPoint = curPoints[^1];
+            else 
+            {
+               if (curSet.Count > 1)
+                  curSet.RemoveAt(curSet.IndexOf(curPolygon));
+               else
+               {
+                  if (Sets.Count > 1) Sets.RemoveAt(Sets.IndexOf(curSet));
+                  else ((Polygon)curSet[0]).Points.Clear();
+               }
+               curPoint = null;
+            }
+         }
+      }
+      private void MyWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      {
+         isCtrlDown = e.Key == System.Windows.Input.Key.LeftCtrl || e.Key == System.Windows.Input.Key.RightCtrl;
+      }
+      private void MyWindow_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+      {
+         isCtrlDown = !(e.Key == System.Windows.Input.Key.LeftCtrl || e.Key == System.Windows.Input.Key.RightCtrl);
+      }
+      private void Button_AddNew_Click(object sender, RoutedEventArgs e)      //add new set
+      {
+         if (curSet.Count > 0 && ListBox_PolygonList.SelectedIndex < 0)
+         {
+            
+            if (curPoints.Count > 2)
+               curSet.Add(new Polygon(new List<Point?>(curPoints)));
+            
+            while (PolygonSetDict.ContainsKey(TextBox_PolygonName.Text))
+               TextBox_PolygonName.Text += "_Copy";
+            PolygonSetDict.Add(TextBox_PolygonName.Text, curSet);
+            ListBox_PolygonList.Items.Add(TextBox_PolygonName.Text);
+            
+            curSet = new List<Polygon?>();
+            Sets.Add(curSet);
+            curPoint = null;
+            curPoints = new List<Point?>();
+            curPolygon = new Polygon(curPoints);
+            curSet.Add(curPolygon);
+         }
+         else if (curSet.Count > 0 && Sets.Contains(curSet) /*ListBox_PolygonList.SelectedIndex >= 0*/)
+         {
+            ListBox_PolygonList.UnselectAll();
+            curSet = new List<Polygon?>();
+            curPoint = null;
+            curPoints = new List<Point?>();
+            curPolygon = new Polygon(curPoints);
+            curSet.Add(curPolygon);
+         }
+      }
+      #endregion
+   }
+}
