@@ -51,8 +51,8 @@
 			</Button.Foreground>
 			<Grid/>
 		</Button>
-		<Slider x:Name="Slider_Red" HorizontalAlignment="Left" Margin="871,0,0,256" VerticalAlignment="Bottom" Width="120" Maximum="255" SmallChange="1" LargeChange="16" ValueChanged="Slider_Red_ValueChanged" Grid.Row="1" Height="18"/>
-		<Slider x:Name="Slider_Green" HorizontalAlignment="Left" Margin="871,295,0,0" VerticalAlignment="Top" Width="120" Maximum="255" SmallChange="1" LargeChange="16" ValueChanged="Slider_Green_ValueChanged" Grid.Row="1" Height="18"/>
+		<Slider x:Name="Slider_Red" HorizontalAlignment="Left" Margin="871,0,0,256" VerticalAlignment="Bottom" Width="120" Maximum="255" SmallChange="1" ValueChanged="Slider_Red_ValueChanged" Grid.Row="1" Height="18"/>
+		<Slider x:Name="Slider_Green" HorizontalAlignment="Left" Margin="871,295,0,0" VerticalAlignment="Top" Width="120" Maximum="255" SmallChange="1" ValueChanged="Slider_Green_ValueChanged" Grid.Row="1" Height="18"/>
 		<Slider x:Name="Slider_Blue" HorizontalAlignment="Left" Margin="871,324,0,0" VerticalAlignment="Top" Width="120" Maximum="255" SmallChange="1" LargeChange="16" ValueChanged="Slider_Blue_ValueChanged" Grid.Row="1" Height="18"/>
 		<TextBlock x:Name="TB_R" HorizontalAlignment="Left" Margin="846,0,0,253" TextWrapping="Wrap" VerticalAlignment="Bottom" Background="Red" Height="25" Width="20" FontWeight="Normal" FontFamily="MV Boli" FontSize="16" FontStyle="Normal" TextAlignment="Center" Text="R" Grid.Row="1">
 			<TextBlock.TextDecorations>
@@ -87,7 +87,7 @@
 				<ImageBrush ImageSource="/Brush.png"/>
 			</Button.Background>
 		</Button>
-		<ListBox x:Name="ListBox_PolygonList" Height="118" Margin="846,0,14,0" Grid.RowSpan="2" VerticalAlignment="Top"/>
+		<ListBox x:Name="ListBox_PolygonList" Height="118" Margin="846,0,14,0" Grid.RowSpan="2" VerticalAlignment="Top" SelectionChanged="ListBox_PolygonList_SelectionChanged" IsSynchronizedWithCurrentItem = "True" />
 		<TextBox x:Name="TextBox_PolygonName" HorizontalAlignment="Left" Margin="846,0,0,311" Text="Name" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="188" FontFamily="Arial Black" FontWeight="Bold" FontSize="16" Grid.Row="1" Height="20"/>
 		<Button x:Name="Button_Save_Copy" 
 	  Click="Button_AddNew_Click" 

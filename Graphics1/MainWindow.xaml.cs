@@ -60,14 +60,18 @@ namespace Graphics1
 
       Dictionary<string, List<Polygon?>> PolygonSetDict = new Dictionary<string, List<Polygon?>> { };
 
-      double[] rgb = new double[3] { 1f, 1f, 1f};
+      double[] rgb = new double[3] { 1f, 1f, 1f };
       bool isCtrlDown = false;
       bool pointChanged = false;
+      bool isSelected = false;
+      bool isRMB = false;
       private void OpenGLControl_OpenGLInitialized(object sender, OpenGLRoutedEventArgs args)
       {
+         var gl = args.OpenGL;
          curPolygon = new Polygon(curPoints);
          curSet.Add(curPolygon);
          Sets.Add(curSet);
+         gl.LineWidth(3);
       }
       private void OpenGLControl_OpenGLDraw(object sender, OpenGLRoutedEventArgs args)
       {
@@ -76,46 +80,9 @@ namespace Graphics1
          gl.ClearColor(1f, 1f, 1f, 1f);
 
          //Drawing current points
-         gl.LineWidth(3);
-         gl.PointSize(12);
+         
          gl.Enable(OpenGL.GL_POINT_SMOOTH);
          gl.Enable(OpenGL.GL_LINE_SMOOTH);
-
-         foreach (var poly in curSet)
-         {
-            if (poly.Equals(curPolygon))
-            {
-               foreach (var point in ((Polygon)curPolygon).Points)
-               {
-                  if (point.Equals(curPoint))
-                     gl.PointSize(20);
-                  else 
-                     gl.PointSize(10);
-                  gl.Begin(OpenGL.GL_POINTS);
-                     gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
-                     gl.Vertex(((Point)point).X, ((Point)point).Y);
-                  gl.End();
-               }
-
-               gl.Begin(OpenGL.GL_LINE_LOOP);
-               foreach (var point in ((Polygon)curPolygon).Points)
-               {
-                  gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
-                  gl.Vertex(((Point)point).X, ((Point)point).Y);
-               }
-               gl.End();
-            }
-            else
-            {
-               gl.Begin(OpenGL.GL_POINT);
-               foreach (var point in ((Polygon)poly).Points)
-               {
-                  gl.Color(((Point)point).Color);
-                  gl.Vertex(((Point)point).X, ((Point)point).Y);
-               }
-               gl.End();
-            }
-         }
 
          foreach (var set in Sets)
          {
@@ -125,6 +92,43 @@ namespace Graphics1
                foreach (var point in ((Polygon)poly).Points)
                {
                   gl.Color(((Point)point).Color);
+                  gl.Vertex(((Point)point).X, ((Point)point).Y);
+               }
+               gl.End();
+            }
+         }
+
+         foreach (var poly in curSet)
+         {
+            if (!poly.Equals(curPolygon)) // точками выделены текущий набор
+            {
+               gl.PointSize(7);
+               gl.Begin(OpenGL.GL_POINTS);
+               foreach (var point in ((Polygon)poly).Points)
+               {
+                  gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
+                  gl.Vertex(((Point)point).X, ((Point)point).Y);
+               }
+               gl.End();
+            }
+            else
+            {
+               foreach (var point in ((Polygon)curPolygon).Points)
+               {
+                  if (point.Equals(curPoint))
+                     gl.PointSize(15);
+                  else
+                     gl.PointSize(7);
+                  gl.Begin(OpenGL.GL_POINTS);
+                  gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
+                  gl.Vertex(((Point)point).X, ((Point)point).Y);
+                  gl.End();
+               }
+
+               gl.Begin(OpenGL.GL_LINE_LOOP);   // линиями выделен текущий полигон
+               foreach (var point in ((Polygon)curPolygon).Points)
+               {
+                  gl.Color(1f - ((Point)point).Color[0], 1f - ((Point)point).Color[1], 1f - ((Point)point).Color[2]);
                   gl.Vertex(((Point)point).X, ((Point)point).Y);
                }
                gl.End();
@@ -230,8 +234,9 @@ namespace Graphics1
       }
       private void OpenGLControl_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
       {
-         if (curPolygon != null)
+         if (curPolygon != null && Sets[0].Count > 0)
          {
+            isRMB = true;
             var x = 2 * (e.GetPosition(sender as OpenGLControl).X / OpenGLControl.ActualWidth) - 1;
             var y = 1 - 2 * e.GetPosition(sender as OpenGLControl).Y / OpenGLControl.ActualHeight;
             double min;
@@ -251,7 +256,7 @@ namespace Graphics1
                         curPoint = point; foundLesser = true; minp = min;
                      }
                   }
-                  if (curPoint != null && ((Polygon)poly).Points.Count > 0 && foundLesser) 
+                  if (curPoint != null && ((Polygon)poly).Points.Count > 0 && foundLesser)
                   { curPolygon = poly; curPoints = ((Polygon)poly).Points; }
                }
                if (curPoint != null && set.Contains(curPolygon)) curSet = set;
@@ -264,7 +269,15 @@ namespace Graphics1
             Slider_Blue.Value = rgb[2] * 255;
             pointChanged = false;
 
-            ListBox_PolygonList.UnselectAll();
+            if (PolygonSetDict.ContainsValue(curSet))
+            {
+               string Key = "";
+               foreach (var key in PolygonSetDict.Keys)
+               {
+                  Key = PolygonSetDict[key] == curSet ? key : "";
+               }
+               ListBox_PolygonList.SelectedIndex = ListBox_PolygonList.Items.IndexOf(Key);
+            }
          }
       }
       private void Button_DeleteAll_Click(object sender, RoutedEventArgs e)
@@ -278,10 +291,16 @@ namespace Graphics1
                PolygonSetDict.Remove((string)ListBox_PolygonList.SelectedItem);
                ListBox_PolygonList.Items.Remove(ListBox_PolygonList.SelectedItem);
             }
-            curPoint = null;
             curSet.Clear();
+
+            curPoints = new List<Point?>();
+            curPoint = null;
+            curSet = new List<Polygon?>();
+            curPolygon = new Polygon(curPoints);
+            curSet.Add(curPolygon);
+            Sets.Add(curSet);
          }
-         else if (Sets.Count == 1)
+         else if (Sets.Count == 1 || (Sets.Count == 2 && Sets[1].Count != 0))
          {
             Sets[0].Clear();
 
@@ -305,7 +324,7 @@ namespace Graphics1
             curPoint = null;
             curPoints.Clear();
          }
-      }     
+      }
       private void Button_DeleteLast_Click(object sender, RoutedEventArgs e) // delete cur point
       {
          if (curPoints.Count > 1)
@@ -313,7 +332,7 @@ namespace Graphics1
             curPoints.RemoveAt(curPoints.IndexOf(curPoint));
             if (curPoints.Count > 1)
                curPoint = curPoints[^1];
-            else 
+            else
             {
                if (curSet.Count > 1)
                   curSet.RemoveAt(curSet.IndexOf(curPolygon));
@@ -336,27 +355,45 @@ namespace Graphics1
       }
       private void Button_AddNew_Click(object sender, RoutedEventArgs e)      //add new set
       {
-         if (curSet.Count > 0 && ListBox_PolygonList.SelectedIndex < 0)
-         {
-            
-            if (curPoints.Count > 2)
-               curSet.Add(new Polygon(new List<Point?>(curPoints)));
-            
-            while (PolygonSetDict.ContainsKey(TextBox_PolygonName.Text))
-               TextBox_PolygonName.Text += "_Copy";
-            PolygonSetDict.Add(TextBox_PolygonName.Text, curSet);
-            ListBox_PolygonList.Items.Add(TextBox_PolygonName.Text);
-            
-            curSet = new List<Polygon?>();
-            Sets.Add(curSet);
-            curPoint = null;
-            curPoints = new List<Point?>();
-            curPolygon = new Polygon(curPoints);
-            curSet.Add(curPolygon);
+         if (curPoints.Count > 2 && (ListBox_PolygonList.SelectedIndex == -1 || isSelected))
+            curSet.Add(curPolygon = new Polygon(new List<Point?>(curPoints)));
+         if (curSet.Count > 1 || (curSet.Count == 1 && ((Polygon)curSet[0]).Points.Count > 2)) // новые полигоны
+         {      
+            if ((ListBox_PolygonList.SelectedIndex == -1 && !PolygonSetDict.ContainsValue(curSet)) || isSelected) //если выбора нет(новый) или сохраняем, что не сохранено
+            {
+               while (PolygonSetDict.ContainsKey(TextBox_PolygonName.Text))
+                  TextBox_PolygonName.Text += "_Copy";
+               PolygonSetDict.Add(TextBox_PolygonName.Text, curSet);
+               ListBox_PolygonList.Items.Add(TextBox_PolygonName.Text);
+
+               if (!isSelected)
+               {
+                  curSet = new List<Polygon?>();
+                  Sets.Add(curSet);
+                  curPoint = null;
+                  curPoints = new List<Point?>();
+                  curPolygon = new Polygon(curPoints);
+                  curSet.Add(curPolygon);
+               }
+            }
+            else if (!isSelected && !isRMB) //если нажал кнопку и есть выбор(обновляем)
+            {
+               PolygonSetDict.Remove(ListBox_PolygonList.SelectedItem.ToString());              
+               ListBox_PolygonList.Items.Remove(ListBox_PolygonList.SelectedItem);            
+               PolygonSetDict.Add(TextBox_PolygonName.Text, curSet);
+               ListBox_PolygonList.Items.Add(TextBox_PolygonName.Text);
+               ListBox_PolygonList.UnselectAll();
+
+               curSet = new List<Polygon?>();
+               Sets.Add(curSet);
+               curPoint = null;
+               curPoints = new List<Point?>();
+               curPolygon = new Polygon(curPoints);
+               curSet.Add(curPolygon);
+            }
          }
-         else if (curSet.Count > 0 && Sets.Contains(curSet) /*ListBox_PolygonList.SelectedIndex >= 0*/)
+         else if (curSet.Count == 1 && ((Polygon)curSet[0]).Points.Count < 3 && !isSelected) // новых полигонов нет
          {
-            ListBox_PolygonList.UnselectAll();
             curSet = new List<Polygon?>();
             curPoint = null;
             curPoints = new List<Point?>();
@@ -365,5 +402,27 @@ namespace Graphics1
          }
       }
       #endregion
+      private void ListBox_PolygonList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+      {
+         if (isSelected = ListBox_PolygonList.SelectedIndex != -1)
+         {
+            isSelected = !isRMB;
+            Button_AddNew_Click(sender, e);
+            isSelected = false;
+            isRMB = false;
+            TextBox_PolygonName.Text = ListBox_PolygonList.SelectedItem.ToString();
+            curSet = PolygonSetDict[ListBox_PolygonList.SelectedItem.ToString()];
+            curPolygon = curSet[0];
+            curPoint = ((Polygon)curPolygon).Points[0];
+            curPoints = ((Polygon)curPolygon).Points;
+
+            rgb = ((Point)curPoint).Color.Clone() as double[];
+
+            Slider_Red.Value = rgb[0] * 255;
+            Slider_Green.Value = rgb[1] * 255;
+            Slider_Blue.Value = rgb[2] * 255;
+            pointChanged = false;
+         }
+      }
    }
 }
