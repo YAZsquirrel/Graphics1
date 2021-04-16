@@ -221,12 +221,12 @@ namespace Graphics1
          var x = 2 * (e.GetPosition(sender as OpenGLControl).X / OpenGLControl.ActualWidth) - 1;
          var y = 1 - 2 * e.GetPosition(sender as OpenGLControl).Y / OpenGLControl.ActualHeight;
 
-         if (!isCtrlDown/* && curPolygon != null*/)
+         if (!isCtrlDown)
          {
             curPoint = new Point(x, y, rgb.Clone() as double[]);
             curPoints.Add(curPoint);
          }
-         else if (isCtrlDown && curPolygon != null)
+         else if (isCtrlDown && curSet.Count > 1 || (curSet.Count == 1 && ((Polygon)curSet[0]).Points.Count > 2))
          {
             int i = curPoints.IndexOf(curPoint);
             curPoints[i] = curPoint = new Point(x, y, ((Point)curPoint).Color);
@@ -315,14 +315,11 @@ namespace Graphics1
       }
       private void Button_NewPolygon_Click(object sender, RoutedEventArgs e) // Add new polygon to cur set
       {
-         if (curSet.Count > 0)
-         {
-            if (curPoints.Count > 2)
-            {
-               curSet.Add(new Polygon(new List<Point?>(curPoints)));
-            }
+         if (curPoints.Count > 2 && (ListBox_PolygonList.SelectedIndex == -1 || isSelected))
+         { 
             curPoint = null;
-            curPoints.Clear();
+            curPoints = new List<Point?>();
+            curSet.Add(curPolygon = new Polygon(curPoints));
          }
       }
       private void Button_DeleteLast_Click(object sender, RoutedEventArgs e) // delete cur point
@@ -347,7 +344,7 @@ namespace Graphics1
       }
       private void MyWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
-         isCtrlDown = e.Key == System.Windows.Input.Key.LeftCtrl || e.Key == System.Windows.Input.Key.RightCtrl;
+         isCtrlDown = (e.Key == System.Windows.Input.Key.LeftCtrl || e.Key == System.Windows.Input.Key.RightCtrl) && MyWindow.IsActive;
       }
       private void MyWindow_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
       {
